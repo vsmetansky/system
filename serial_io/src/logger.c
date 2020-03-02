@@ -1,9 +1,9 @@
-#include <logger.h>
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+#include <logger.h>
 
 void logg(char *message) {
     char *err_buff = strerror(errno);
