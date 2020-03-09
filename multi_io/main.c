@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
             if ((b_read = read(STDIN_FILENO, buf, BUF_SIZE)) < 0) {
                 logg_term("Error reading data");
             } else {
-                printf("%s:\n", argv[1]);
+                printf("\n%s:\n", argv[1]);
                 write(STDOUT_FILENO, buf, b_read);
             }
         } else {
@@ -60,11 +60,12 @@ bool stdin_active(void) {
 
     select_setup(&readfds, &timer);
 
-    int active = select(STDIN_FILENO, &readfds, NULL, NULL, &timer);
+    int active = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timer);
 
     if (active < 0) {
         exit(EXIT_FAILURE);
-    } else if (active) {
+    }
+    if (active > 0) {
         return true;
     }
     return false;
