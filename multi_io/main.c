@@ -14,25 +14,22 @@
 void read_setup(fd_set *readfds);
 void timer_setup(struct timeval *t);
 void select_setup(fd_set *readfds, struct timeval *t);
-bool stdin_active(void);
+bool stdin_availible(void);
+int stdin_read(char *buf, int buf_size);
+void stdout_write(char *label, char *buf, int b_num);
 
 int main(int argc, char **argv) {
     if (argc < ARG_NUM + 1) {
+        puts("You should provide 1 argument (label name)");
         return EXIT_FAILURE;
     }
     
     while(true) {
-        if (stdin_active()) {
+        if (stdin_availible()) {
             char buf[BUF_SIZE];
-            char b_read = 0;
-            if ((b_read = read(STDIN_FILENO, buf, BUF_SIZE)) < 0) {
-                logg_term("Error reading data");
-            } else {
-                printf("\n%s:\n", argv[1]);
-                write(STDOUT_FILENO, buf, b_read);
-            }
+            stdout_write(argv[1], buf, stdin_read(buf, BUF_SIZE));
         } else {
-            logg(argv[1]);
+            puts(argv[1]);
         }
     }
     
@@ -54,19 +51,33 @@ void select_setup(fd_set *readfds, struct timeval *t) {
     timer_setup(t);
 }
 
-bool stdin_active(void) {
+bool stdin_availible(void) {
     fd_set readfds;
     struct timeval timer;
 
     select_setup(&readfds, &timer);
 
-    int active = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timer);
+    int availible = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timer);
 
-    if (active < 0) {
+    if (availible < 0) {
         exit(EXIT_FAILURE);
     }
-    if (active > 0) {
+    if (availible) {
         return true;
     }
     return false;
+}
+
+void stdout_write(char *label, char *buf, int b_num) {
+    printf("\n%s: ", label);
+    write(STDOUT_FILENO, buf, b_num);
+    printf("\n");
+}
+
+int stdin_read(char *buf, int buf_size) {
+    int b_read = 0;
+    if ((b_read = read(STDIN_FILENO, buf, buf_size)) < 0) {
+        logg_term("Error reading data");
+    }
+    return b_read;
 }
